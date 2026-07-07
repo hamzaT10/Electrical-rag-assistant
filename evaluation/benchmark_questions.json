@@ -1,0 +1,55 @@
+[
+  {
+    "case_id": "sample-power-001",
+    "question": "What is total harmonic distortion used to measure?",
+    "expected_source": "sample_power_quality_guide.pdf",
+    "expected_answer_contains": [
+      "harmonic",
+      "distortion",
+      "waveform"
+    ],
+    "topic": "power_quality",
+    "language": "en",
+    "expected_facts": [
+      {
+        "name": "mentions_harmonics",
+        "accepted_terms": ["harmonic", "harmonics"]
+      },
+      {
+        "name": "mentions_distortion",
+        "accepted_terms": ["distortion", "distorted waveform"]
+      }
+    ]
+  },
+  {
+    "case_id": "sample-modbus-001",
+    "question": "What is a Modbus function code?",
+    "expected_source": "sample_modbus_guide.pdf",
+    "expected_answer_contains": [
+      "function code",
+      "request",
+      "action"
+    ],
+    "topic": "industrial_protocols",
+    "language": "en",
+    "expected_facts": [
+      {
+        "name": "mentions_function_code",
+        "accepted_terms": ["function code"]
+      },
+      {
+        "name": "mentions_action",
+        "accepted_terms": ["action", "operation"]
+      }
+    ]
+  },
+  {
+    "case_id": "sample-no-answer-001",
+    "question": "Who won the football World Cup?",
+    "should_answer": false,
+    "topic": "off_topic",
+    "language": "en",
+    "expected_answer_contains": [],
+    "expected_facts": []
+  }
+]

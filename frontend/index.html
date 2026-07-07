@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Electrical Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg-glow glow-a"></div>
+    <div class="bg-glow glow-b"></div>
+    <div class="page">
+      <header class="hero">
+        <p class="eyebrow">Industrial Knowledge Assistant</p>
+        <h1>Electrical Assistant</h1>
+        <p class="sub">
+          Ask technical questions from your electrical standards, manuals, and reports with cited
+          sources.
+        </p>
+        <div class="status-row">
+          <span id="healthBadge" class="badge neutral">Checking API...</span>
+          <span id="metaBadge" class="meta"></span>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel ask-panel">
+          <div class="panel-block">
+            <h2>Ask A Question</h2>
+            <p class="hint">Answers are grounded in retrieved document chunks.</p>
+
+            <div class="suggestions" id="suggestions">
+              <button type="button" data-q="What does IEEE 519 define?">IEEE 519 summary</button>
+              <button type="button" data-q="How is voltage unbalance measured?">
+                Voltage unbalance
+              </button>
+              <button type="button" data-q="What are power factor correction best practices?">
+                PFC best practices
+              </button>
+            </div>
+
+            <form id="chatForm" class="chat-form">
+              <label for="documentScope">Search scope</label>
+              <select id="documentScope" name="documentScope">
+                <option value="">All indexed documents</option>
+              </select>
+              <label for="question">Question</label>
+              <textarea
+                id="question"
+                name="question"
+                rows="5"
+                placeholder="Type your technical question..."
+                required
+              ></textarea>
+              <button id="askBtn" type="submit">Generate Answer</button>
+            </form>
+          </div>
+
+          <div class="panel-block upload-block">
+            <h2>Documents</h2>
+            <form id="uploadForm" class="upload-form">
+              <label for="pdfFile">PDF file</label>
+              <div class="file-row">
+                <input id="pdfFile" name="file" type="file" accept="application/pdf,.pdf" />
+                <button id="uploadBtn" type="submit">Upload PDF</button>
+              </div>
+            </form>
+            <div id="uploadStatus" class="job-status empty">No upload running.</div>
+          </div>
+        </section>
+
+        <section class="panel answer-panel">
+          <h2>Answer</h2>
+          <div id="answer" class="answer empty">Your answer will appear here.</div>
+          <h3>Citations</h3>
+          <div id="citations" class="citations empty">No citations yet.</div>
+        </section>
+      </main>
+    </div>
+    <script src="./app.js"></script>
+  </body>
+</html>

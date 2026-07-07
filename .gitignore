@@ -1,0 +1,40 @@
+# .gitignore
+
+# Python cache
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Vector stores, document corpora, and generated data
+vectorstore/
+Data/
+*.log
+
+# Python and test artifacts
+.venv/
+Llm_assis/
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# Notebook artifacts
+.ipynb_checkpoints/
+
+# Project generated artifacts
+Prep_Data/
+Scripts/figures/
+Scripts/tables/
+evaluation/results/
+outputs/
+tools/
+notes.txt
+docs/CHAT_PERSISTENCE_AND_HISTORY.md
