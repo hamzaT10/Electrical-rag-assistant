@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+.venv
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.ruff_cache
+.ipynb_checkpoints
+Data
+evaluation/results
+Prep_Data
+vectorstore
+Scripts

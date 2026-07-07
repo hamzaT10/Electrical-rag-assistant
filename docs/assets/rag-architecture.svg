@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="980" viewBox="0 0 1400 980" role="img" aria-labelledby="title desc">
+  <title id="title">Electrical RAG Assistant production architecture</title>
+  <desc id="desc">Architecture diagram showing frontend, FastAPI backend, PostgreSQL, Redis, Celery worker, PDF ingestion, Qdrant vector database, LLM runtime, evaluation, observability, and CI/CD.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fafc; }
+      .band { stroke: #cbd5e1; stroke-width: 2; rx: 14; }
+      .title { font: 700 28px Arial, sans-serif; fill: #0f172a; }
+      .section { font: 700 18px Arial, sans-serif; fill: #0f172a; }
+      .box { fill: #ffffff; stroke: #475569; stroke-width: 2; rx: 10; }
+      .box-strong { fill: #ffffff; stroke: #0f766e; stroke-width: 3; rx: 10; }
+      .label { font: 700 16px Arial, sans-serif; fill: #0f172a; }
+      .small { font: 13px Arial, sans-serif; fill: #334155; }
+      .tiny { font: 12px Arial, sans-serif; fill: #475569; }
+      .flow { stroke: #334155; stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
+      .metric { stroke: #7c3aed; stroke-width: 2; fill: none; stroke-dasharray: 8 5; marker-end: url(#arrow); }
+      .ci { stroke: #0369a1; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1400" height="980"/>
+  <text class="title" x="36" y="48">Electrical RAG Assistant - Public Production Architecture</text>
+  <text class="small" x="36" y="74">Source-grounded technical Q&amp;A over user-provided electrical documentation</text>
+
+  <rect class="band" x="28" y="105" width="260" height="520" fill="#e0f2fe"/>
+  <text class="section" x="48" y="136">User Interface</text>
+  <rect class="box" x="58" y="174" width="200" height="92"/>
+  <text class="label" x="94" y="210">Frontend</text>
+  <text class="small" x="88" y="236">Chat, upload, filters</text>
+  <text class="tiny" x="90" y="256">Nginx static app</text>
+  <rect class="box" x="58" y="318" width="200" height="94"/>
+  <text class="label" x="99" y="354">API Client</text>
+  <text class="small" x="76" y="380">/chat, /chat/stream</text>
+  <text class="tiny" x="84" y="400">documents + history</text>
+
+  <rect class="band" x="316" y="105" width="360" height="520" fill="#dcfce7"/>
+  <text class="section" x="338" y="136">RAG Orchestrator</text>
+  <rect class="box-strong" x="386" y="170" width="220" height="98"/>
+  <text class="label" x="464" y="207">FastAPI</text>
+  <text class="small" x="424" y="233">schemas, routing, auth-ready</text>
+  <text class="tiny" x="435" y="253">request IDs + metrics</text>
+  <rect class="box" x="348" y="318" width="150" height="92"/>
+  <text class="label" x="390" y="354">Chat</text>
+  <text class="small" x="370" y="380">prompt + citations</text>
+  <rect class="box" x="518" y="318" width="128" height="92"/>
+  <text class="label" x="546" y="354">Stream</text>
+  <text class="small" x="539" y="380">token events</text>
+  <rect class="box" x="348" y="454" width="298" height="102"/>
+  <text class="label" x="424" y="490">RAG Service</text>
+  <text class="small" x="382" y="516">retrieve, rerank, select context</text>
+  <text class="tiny" x="414" y="536">LLM provider abstraction</text>
+
+  <rect class="band" x="704" y="105" width="332" height="520" fill="#fef3c7"/>
+  <text class="section" x="724" y="136">Data Stores</text>
+  <rect class="box" x="744" y="172" width="250" height="92"/>
+  <text class="label" x="823" y="208">PostgreSQL</text>
+  <text class="small" x="770" y="234">sessions, messages, documents</text>
+  <text class="tiny" x="796" y="254">ingestion job state</text>
+  <rect class="box" x="744" y="318" width="250" height="92"/>
+  <text class="label" x="846" y="354">Redis</text>
+  <text class="small" x="782" y="380">cache, rate limit, Celery broker</text>
+  <rect class="box-strong" x="744" y="464" width="250" height="92"/>
+  <text class="label" x="846" y="500">Qdrant</text>
+  <text class="small" x="772" y="526">chunk vectors + metadata payload</text>
+
+  <rect class="band" x="1064" y="105" width="308" height="520" fill="#ede9fe"/>
+  <text class="section" x="1084" y="136">AI Services</text>
+  <rect class="box" x="1100" y="172" width="230" height="92"/>
+  <text class="label" x="1142" y="208">Embeddings</text>
+  <text class="small" x="1130" y="234">SentenceTransformers</text>
+  <text class="tiny" x="1138" y="254">cached model weights</text>
+  <rect class="box" x="1100" y="318" width="230" height="92"/>
+  <text class="label" x="1152" y="354">Reranker</text>
+  <text class="small" x="1125" y="380">cross-encoder candidates</text>
+  <rect class="box-strong" x="1100" y="464" width="230" height="92"/>
+  <text class="label" x="1155" y="500">LLM Runtime</text>
+  <text class="small" x="1116" y="526">Ollama, LM Studio, vLLM, API</text>
+
+  <rect class="band" x="316" y="660" width="360" height="260" fill="#fee2e2"/>
+  <text class="section" x="338" y="691">Async Ingestion</text>
+  <rect class="box" x="348" y="724" width="138" height="76"/>
+  <text class="label" x="384" y="754">PDFs</text>
+  <text class="small" x="374" y="780">upload/local</text>
+  <rect class="box" x="510" y="724" width="136" height="76"/>
+  <text class="label" x="544" y="754">Celery</text>
+  <text class="small" x="536" y="780">worker jobs</text>
+  <rect class="box" x="348" y="830" width="298" height="66"/>
+  <text class="label" x="399" y="858">Extract + OCR + Chunk</text>
+  <text class="small" x="387" y="880">incremental indexing with metadata</text>
+
+  <rect class="band" x="704" y="660" width="332" height="260" fill="#fce7f3"/>
+  <text class="section" x="724" y="691">Evaluation</text>
+  <rect class="box" x="744" y="724" width="250" height="76"/>
+  <text class="label" x="804" y="754">Benchmark Runner</text>
+  <text class="small" x="774" y="780">hit rate, MRR, fact coverage</text>
+  <rect class="box" x="744" y="830" width="250" height="66"/>
+  <text class="label" x="806" y="858">Failed-Case Analysis</text>
+  <text class="small" x="782" y="880">retrieval vs answer quality</text>
+
+  <rect class="band" x="1064" y="660" width="308" height="260" fill="#cffafe"/>
+  <text class="section" x="1084" y="691">Observability + Delivery</text>
+  <rect class="box" x="1100" y="724" width="230" height="76"/>
+  <text class="label" x="1146" y="754">Prometheus</text>
+  <text class="small" x="1132" y="780">metrics scrape + PromQL</text>
+  <rect class="box" x="1100" y="830" width="102" height="66"/>
+  <text class="label" x="1122" y="858">Grafana</text>
+  <text class="tiny" x="1123" y="880">dashboards</text>
+  <rect class="box" x="1228" y="830" width="102" height="66"/>
+  <text class="label" x="1252" y="858">CI/CD</text>
+  <text class="tiny" x="1242" y="880">GitHub Actions</text>
+
+  <path class="flow" d="M258 220 H386"/>
+  <path class="flow" d="M258 365 H348"/>
+  <path class="flow" d="M496 268 V318"/>
+  <path class="flow" d="M423 410 V454"/>
+  <path class="flow" d="M582 410 V454"/>
+  <path class="flow" d="M646 505 H744"/>
+  <path class="flow" d="M606 218 H744"/>
+  <path class="flow" d="M606 238 C674 238 676 364 744 364"/>
+  <path class="flow" d="M994 510 H1100"/>
+  <path class="flow" d="M994 510 C1040 510 1040 364 1100 364"/>
+  <path class="flow" d="M606 505 C780 505 930 218 1100 218"/>
+  <path class="flow" d="M486 762 H510"/>
+  <path class="flow" d="M578 800 V830"/>
+  <path class="flow" d="M646 864 C720 864 704 510 744 510"/>
+  <path class="flow" d="M578 724 C578 676 846 676 846 410"/>
+  <path class="flow" d="M870 464 V410"/>
+  <path class="flow" d="M870 264 V318"/>
+  <path class="metric" d="M606 190 C790 100 970 100 1100 724"/>
+  <path class="metric" d="M606 555 C808 620 948 696 1100 762"/>
+  <path class="metric" d="M1215 556 V724"/>
+  <path class="ci" d="M1279 830 C1279 638 1180 640 1180 556"/>
+
+  <text class="tiny" x="1020" y="696">/metrics</text>
+  <text class="tiny" x="1190" y="642">traces + timings</text>
+  <text class="tiny" x="1290" y="748">images</text>
+  <text class="tiny" x="36" y="952">Public release excludes private PDFs, extracted text, vector indexes, .env files, and generated evaluation outputs.</text>
+</svg>

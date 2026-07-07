@@ -1,0 +1,175 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: electrical-rag-postgres
+    environment:
+      POSTGRES_DB: electrical_rag
+      POSTGRES_USER: electrical_rag
+      POSTGRES_PASSWORD: electrical_rag
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U electrical_rag -d electrical_rag"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: electrical-rag-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.6
+    container_name: electrical-rag-qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  rag-api:
+    build:
+      context: .
+      args:
+        INSTALL_OCR: "false"
+    container_name: electrical-rag-api
+    env_file:
+      - .env
+    environment:
+      DATA_DIR: /app/Data
+      VECTORSTORE_DIR: /app/vectorstore
+      VECTOR_BACKEND: qdrant
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_COLLECTION: electrical_rag_chunks
+      RAG_MIN_RETRIEVAL_SCORE: ${RAG_MIN_RETRIEVAL_SCORE:-0.30}
+      ENABLE_RERANKER: ${ENABLE_RERANKER:-false}
+      RERANKER_MODEL_NAME: ${RERANKER_MODEL_NAME:-cross-encoder/ms-marco-MiniLM-L-6-v2}
+      PRELOAD_RAG_SERVICE: ${PRELOAD_RAG_SERVICE:-true}
+      WARMUP_EMBEDDING_MODEL: ${WARMUP_EMBEDDING_MODEL:-true}
+      HF_HOME: /models/huggingface
+      APP_LOG_FORMAT: ${APP_LOG_FORMAT:-json}
+      ENABLE_METRICS: ${ENABLE_METRICS:-true}
+      ENABLE_OCR_FALLBACK: "false"
+      LMSTUDIO_BASE_URL: ${LMSTUDIO_BASE_URL_DOCKER:-http://host.docker.internal:1234/v1}
+      DATABASE_URL: postgresql+psycopg://electrical_rag:electrical_rag@postgres:5432/electrical_rag
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./vectorstore:/app/vectorstore
+      - ./Data:/app/Data
+      - huggingface_cache:/models/huggingface
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 20s
+      timeout: 5s
+      retries: 6
+      start_period: 90s
+
+  rag-worker:
+    build:
+      context: .
+      args:
+        INSTALL_OCR: "true"
+    container_name: electrical-rag-worker
+    command: celery -A electrical_rag.workers.ingestion_tasks worker --loglevel=INFO --concurrency=1
+    gpus: all
+    env_file:
+      - .env
+    environment:
+      DATA_DIR: /app/Data
+      VECTORSTORE_DIR: /app/vectorstore
+      VECTOR_BACKEND: qdrant
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_COLLECTION: electrical_rag_chunks
+      RAG_MIN_RETRIEVAL_SCORE: ${RAG_MIN_RETRIEVAL_SCORE:-0.30}
+      ENABLE_RERANKER: ${ENABLE_RERANKER:-false}
+      RERANKER_MODEL_NAME: ${RERANKER_MODEL_NAME:-cross-encoder/ms-marco-MiniLM-L-6-v2}
+      HF_HOME: /models/huggingface
+      ENABLE_OCR_FALLBACK: "true"
+      DATABASE_URL: postgresql+psycopg://electrical_rag:electrical_rag@postgres:5432/electrical_rag
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    volumes:
+      - ./vectorstore:/app/vectorstore
+      - ./Data:/app/Data
+      - huggingface_cache:/models/huggingface
+
+  rag-frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: electrical-rag-frontend
+    depends_on:
+      rag-api:
+        condition: service_healthy
+    ports:
+      - "3000:80"
+
+  prometheus:
+    image: prom/prometheus:v3.12.0
+    container_name: electrical-rag-prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+    depends_on:
+      rag-api:
+        condition: service_started
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+
+  grafana:
+    image: grafana/grafana:13.0.2
+    container_name: electrical-rag-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-change-me}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
+    depends_on:
+      prometheus:
+        condition: service_started
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  prometheus_data:
+  grafana_data:
+  huggingface_cache:
