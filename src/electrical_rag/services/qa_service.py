@@ -9,7 +9,7 @@ from electrical_rag.core.messages import NO_RELEVANT_CONTEXT_ANSWER
 from electrical_rag.core.settings import Settings
 from electrical_rag.observability.metrics import record_rag_request
 from electrical_rag.observability.tracing import TraceManager
-from electrical_rag.providers.lmstudio import LMStudioClient
+from electrical_rag.providers.openai_compatible import OpenAICompatibleClient
 from electrical_rag.rag.answer_postprocessing import trim_incomplete_trailing_sentence
 from electrical_rag.rag.context_selection import apply_context_budget, limit_chunks_per_source_page
 from electrical_rag.rag.device_metadata import detect_query_devices
@@ -40,7 +40,7 @@ class RAGService:
         self.settings = settings
         self.tracing = trace_manager or TraceManager(settings)
         self.retriever = VectorRetriever(settings, trace_manager=self.tracing)
-        self.llm = LMStudioClient(settings)
+        self.llm = OpenAICompatibleClient(settings)
 
     def warmup_embeddings(self) -> int:
         return self.retriever.warmup_embeddings()
@@ -153,7 +153,7 @@ class RAGService:
             name="generate-answer",
             as_type="generation",
             input_data=self.tracing.content(prompt, "prompt"),
-            model=self.settings.lmstudio_model,
+            model=self.settings.llm_model,
             model_parameters={"temperature": self.settings.llm_temperature},
         ) as generation:
             answer = self.llm.ask(prompt)
@@ -303,7 +303,7 @@ class RAGService:
             name="generate-answer",
             as_type="generation",
             input_data=self.tracing.content(prompt, "prompt"),
-            model=self.settings.lmstudio_model,
+            model=self.settings.llm_model,
             model_parameters={"temperature": self.settings.llm_temperature},
         ) as generation:
             for token in self.llm.stream(prompt):

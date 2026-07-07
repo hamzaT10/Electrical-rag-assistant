@@ -26,14 +26,14 @@ async function checkHealth() {
     }
 
     const health = await healthRes.json();
-    if (health.vectorstore_ready && health.lmstudio_ready) {
+    if (health.vectorstore_ready && health.llm_ready) {
       healthBadge.textContent = "API Ready";
       healthBadge.className = "badge ok";
     } else if (!health.vectorstore_ready) {
       healthBadge.textContent = "Vectorstore Missing";
       healthBadge.className = "badge warn";
-    } else if (!health.lmstudio_ready) {
-      healthBadge.textContent = "LM Studio Offline";
+    } else if (!health.llm_ready) {
+      healthBadge.textContent = "LLM Offline";
       healthBadge.className = "badge warn";
     } else {
       healthBadge.textContent = "API Degraded";

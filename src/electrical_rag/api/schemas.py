@@ -82,8 +82,8 @@ class DocumentSummary(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     vectorstore_ready: bool
-    lmstudio_ready: bool
-    lmstudio_error: str | None = None
+    llm_ready: bool
+    llm_error: str | None = None
     rag_service_ready: bool
     rag_service_error: str | None = None
     rag_service_startup_seconds: float | None = None

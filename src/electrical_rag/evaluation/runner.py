@@ -465,7 +465,7 @@ def run_benchmark(benchmark_path: Path, results_dir: Path | None = None) -> Benc
             ),
             "chunk_size": settings.chunk_size,
             "chunk_overlap": settings.chunk_overlap,
-            "lmstudio_model": settings.lmstudio_model,
+            "llm_model": settings.llm_model,
         },
         summary=compute_summary(results),
         failed_cases=build_failed_case_summary(results),

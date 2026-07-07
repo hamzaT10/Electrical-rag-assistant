@@ -35,10 +35,10 @@ class Settings(BaseSettings):
     enable_ocr_fallback: bool = False
     ocr_languages: str = "en"
 
-    lmstudio_base_url: str = "http://localhost:1234/v1"
-    lmstudio_api_key: str = "lm-studio"
-    lmstudio_model: str = "local-model"
-    lmstudio_health_timeout_seconds: float = Field(default=3.0, ge=0.5, le=30.0)
+    llm_base_url: str = "http://localhost:1234/v1"
+    llm_api_key: str = "local-dev-key"
+    llm_model: str = "openai-compatible-model"
+    llm_health_timeout_seconds: float = Field(default=3.0, ge=0.5, le=30.0)
     llm_temperature: float = Field(default=0.1, ge=0.0, le=1.0)
 
     app_log_level: str = "INFO"

@@ -82,13 +82,13 @@ def test_nested_span_records_generation_metadata() -> None:
     with manager.span(
         name="generate-answer",
         as_type="generation",
-        model="local-model",
+        model="openai-compatible-model",
         model_parameters={"temperature": 0.1},
     ) as span:
         span.update(output={"answer_chars": 22})
 
     assert client.started[0]["as_type"] == "generation"
-    assert client.started[0]["model"] == "local-model"
+    assert client.started[0]["model"] == "openai-compatible-model"
     assert client.observations[0].updates == [{"output": {"answer_chars": 22}}]
 
 

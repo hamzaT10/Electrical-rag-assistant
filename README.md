@@ -44,7 +44,7 @@ prototype.
 4. Chat requests are rate-limited through Redis and persisted in PostgreSQL.
 5. The retriever embeds the user question, searches Qdrant, applies metadata
    filters, optionally reranks candidates, and selects a compact context.
-6. The LLM provider calls an OpenAI-compatible runtime such as Ollama, LM Studio,
+6. The LLM provider calls an OpenAI-compatible runtime such as Ollama, OpenAI-compatible LLM runtime,
    or another hosted compatible endpoint.
 7. Answers, citations, timings, cache outcomes, and source metadata are returned
    to the frontend and recorded through logs, metrics, and optional traces.
@@ -129,14 +129,14 @@ REDIS_URL=redis://localhost:6379/0
 CELERY_BROKER_URL=redis://localhost:6379/1
 CELERY_RESULT_BACKEND=redis://localhost:6379/2
 EMBEDDING_MODEL_NAME=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
-LMSTUDIO_BASE_URL=http://localhost:1234/v1
-LMSTUDIO_MODEL=local-model
+LLM_BASE_URL=http://localhost:1234/v1
+LLM_MODEL=openai-compatible-model
 ENABLE_RERANKER=false
 ENABLE_LANGFUSE=false
 ```
 
-The `LMSTUDIO_*` names are compatibility settings for any OpenAI-compatible
-runtime. They can point to Ollama, LM Studio, vLLM, or a hosted compatible API.
+The `LLM_*` names are compatibility settings for any OpenAI-compatible
+runtime. They can point to Ollama, OpenAI-compatible LLM runtime, vLLM, or a hosted compatible API.
 
 ## Run With Docker Compose
 

@@ -1,5 +1,5 @@
 """External provider integrations."""
 
-from electrical_rag.providers.lmstudio import LMStudioClient
+from electrical_rag.providers.openai_compatible import OpenAICompatibleClient
 
-__all__ = ["LMStudioClient"]
+__all__ = ["OpenAICompatibleClient"]

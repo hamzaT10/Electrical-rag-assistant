@@ -42,7 +42,10 @@ from electrical_rag.observability.metrics import (
 )
 from electrical_rag.observability.middleware import ObservabilityMiddleware
 from electrical_rag.observability.tracing import TraceManager
-from electrical_rag.providers.lmstudio import LMStudioClient, LMStudioUnavailableError
+from electrical_rag.providers.openai_compatible import (
+    LLMProviderUnavailableError,
+    OpenAICompatibleClient,
+)
 from electrical_rag.rag.qdrant_store import QdrantVectorStore
 from electrical_rag.security.rate_limit import RedisRateLimiter
 from electrical_rag.services.qa_service import RAGService
@@ -76,7 +79,7 @@ async def lifespan(_: FastAPI):
 app = FastAPI(
     title="Electrical RAG API",
     version="0.1.0",
-    description="Document QA API backed by FAISS retrieval and LM Studio.",
+    description="Document QA API backed by FAISS retrieval and OpenAI-compatible LLM runtime.",
     lifespan=lifespan,
 )
 
@@ -173,8 +176,8 @@ def _bootstrap_service() -> RAGService | None:
             return None
 
 
-def _check_lmstudio_ready() -> tuple[bool, str | None]:
-    return LMStudioClient(settings).check_health()
+def _check_llm_ready() -> tuple[bool, str | None]:
+    return OpenAICompatibleClient(settings).check_health()
 
 
 def _check_vectorstore_ready() -> bool:
@@ -256,21 +259,21 @@ def _resolve_upload_dir() -> Path:
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     vectorstore_ready = _check_vectorstore_ready()
-    lmstudio_ready, lmstudio_error = _check_lmstudio_ready()
+    llm_ready, llm_error = _check_llm_ready()
     rag_service_ready = service is not None
     service_requirement_met = (
         rag_service_ready if settings.preload_rag_service else True
     )
     status = (
         "ready"
-        if vectorstore_ready and lmstudio_ready and service_requirement_met
+        if vectorstore_ready and llm_ready and service_requirement_met
         else "degraded"
     )
     return HealthResponse(
         status=status,
         vectorstore_ready=vectorstore_ready,
-        lmstudio_ready=lmstudio_ready,
-        lmstudio_error=lmstudio_error,
+        llm_ready=llm_ready,
+        llm_error=llm_error,
         rag_service_ready=rag_service_ready,
         rag_service_error=service_bootstrap_error,
         rag_service_startup_seconds=service_bootstrap_seconds,
@@ -282,7 +285,7 @@ def health() -> HealthResponse:
 def meta() -> dict[str, object]:
     return {
         "service": "electrical-rag-api",
-        "model": settings.lmstudio_model,
+        "model": settings.llm_model,
         "embedding_model": settings.embedding_model_name,
         "embedding_dimension": embedding_dimension,
         "preload_rag_service": settings.preload_rag_service,
@@ -562,8 +565,8 @@ def chat(
                     "langfuse_trace_created",
                     extra={"langfuse_trace_id": trace.trace_id},
                 )
-    except LMStudioUnavailableError as exc:
-        logger.warning("request_id=%s lmstudio_unavailable error=%s", request_id, exc)
+    except LLMProviderUnavailableError as exc:
+        logger.warning("request_id=%s llm_unavailable error=%s", request_id, exc)
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
         logger.exception("request_id=%s chat_request_failed error=%s", request_id, exc)
@@ -632,10 +635,10 @@ def chat_stream(payload: ChatRequest, request: Request) -> StreamingResponse:
                             "langfuse_trace_created",
                             extra={"langfuse_trace_id": trace.trace_id},
                         )
-                except LMStudioUnavailableError as exc:
+                except LLMProviderUnavailableError as exc:
                     trace.update(level="ERROR", status_message=str(exc))
                     logger.warning(
-                        "request_id=%s streaming_lmstudio_unavailable error=%s",
+                        "request_id=%s streaming_llm_unavailable error=%s",
                         request_id,
                         exc,
                     )

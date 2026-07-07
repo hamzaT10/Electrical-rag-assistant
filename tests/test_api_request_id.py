@@ -83,9 +83,9 @@ def test_chat_returns_request_id_header_and_passes_it_to_service(monkeypatch) ->
     assert fake_service.request_ids == [request_id]
 
 
-def test_health_reports_lmstudio_readiness(monkeypatch) -> None:
+def test_health_reports_llm_readiness(monkeypatch) -> None:
     monkeypatch.setattr(app_module.settings, "vectorstore_dir", Path("."))
-    monkeypatch.setattr(app_module, "_check_lmstudio_ready", lambda: (True, None))
+    monkeypatch.setattr(app_module, "_check_llm_ready", lambda: (True, None))
     client = TestClient(app_module.app)
 
     response = client.get("/health")
@@ -94,8 +94,8 @@ def test_health_reports_lmstudio_readiness(monkeypatch) -> None:
     assert response.json() == {
         "status": "ready",
         "vectorstore_ready": True,
-        "lmstudio_ready": True,
-        "lmstudio_error": None,
+        "llm_ready": True,
+        "llm_error": None,
         "rag_service_ready": False,
         "rag_service_error": None,
         "rag_service_startup_seconds": None,

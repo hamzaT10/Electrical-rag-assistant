@@ -8,31 +8,36 @@ except ImportError:
 
 from electrical_rag.core.settings import Settings
 
+PROVIDER_UNAVAILABLE_MESSAGE = (
+    "The LLM provider is unavailable. Check the OpenAI-compatible endpoint, "
+    "API key, and verify the OpenAI-compatible server is running."
+)
 
-class LMStudioUnavailableError(RuntimeError):
-    """Raised when the local LM Studio OpenAI-compatible server cannot respond."""
+
+class LLMProviderUnavailableError(RuntimeError):
+    """Raised when the OpenAI-compatible LLM server cannot respond."""
 
 
-class LMStudioClient:
+class OpenAICompatibleClient:
     def __init__(self, settings: Settings):
         self.settings = settings
         if OpenAI is not None:
             self.mode = "v1"
             self.client = OpenAI(
-                base_url=self.settings.lmstudio_base_url,
-                api_key=self.settings.lmstudio_api_key,
+                base_url=self.settings.llm_base_url,
+                api_key=self.settings.llm_api_key,
             )
         else:
             self.mode = "legacy"
-            openai.api_key = self.settings.lmstudio_api_key
-            openai.api_base = self.settings.lmstudio_base_url
+            openai.api_key = self.settings.llm_api_key
+            openai.api_base = self.settings.llm_base_url
             self.client = openai
 
     def check_health(self) -> tuple[bool, str | None]:
         try:
             if self.mode == "v1":
                 self.client.with_options(
-                    timeout=self.settings.lmstudio_health_timeout_seconds
+                    timeout=self.settings.llm_health_timeout_seconds
                 ).models.list()
             else:
                 self.client.Model.list()
@@ -58,29 +63,23 @@ class LMStudioClient:
         if self.mode == "v1":
             try:
                 response = self.client.chat.completions.create(
-                    model=self.settings.lmstudio_model,
+                    model=self.settings.llm_model,
                     temperature=self.settings.llm_temperature,
                     messages=messages,
                 )
             except Exception as exc:
-                raise LMStudioUnavailableError(
-                    "LM Studio is unavailable. Start LM Studio, load the model, "
-                    "and verify the OpenAI-compatible server is running."
-                ) from exc
+                raise LLMProviderUnavailableError(PROVIDER_UNAVAILABLE_MESSAGE) from exc
             message = response.choices[0].message.content
             return self._content_to_text(message).strip()
 
         try:
             response = self.client.ChatCompletion.create(  # openai<1.x fallback
-                model=self.settings.lmstudio_model,
+                model=self.settings.llm_model,
                 temperature=self.settings.llm_temperature,
                 messages=messages,
             )
         except Exception as exc:
-            raise LMStudioUnavailableError(
-                "LM Studio is unavailable. Start LM Studio, load the model, "
-                "and verify the OpenAI-compatible server is running."
-            ) from exc
+            raise LLMProviderUnavailableError(PROVIDER_UNAVAILABLE_MESSAGE) from exc
         return (response["choices"][0]["message"]["content"] or "").strip()
 
     def stream(self, prompt: str):
@@ -89,16 +88,13 @@ class LMStudioClient:
         if self.mode == "v1":
             try:
                 stream = self.client.chat.completions.create(
-                    model=self.settings.lmstudio_model,
+                    model=self.settings.llm_model,
                     temperature=self.settings.llm_temperature,
                     messages=messages,
                     stream=True,
                 )
             except Exception as exc:
-                raise LMStudioUnavailableError(
-                    "LM Studio is unavailable. Start LM Studio, load the model, "
-                    "and verify the OpenAI-compatible server is running."
-                ) from exc
+                raise LLMProviderUnavailableError(PROVIDER_UNAVAILABLE_MESSAGE) from exc
             for chunk in stream:
                 delta = chunk.choices[0].delta
                 text = self._content_to_text(getattr(delta, "content", None))
@@ -108,16 +104,13 @@ class LMStudioClient:
 
         try:
             stream = self.client.ChatCompletion.create(  # openai<1.x fallback
-                model=self.settings.lmstudio_model,
+                model=self.settings.llm_model,
                 temperature=self.settings.llm_temperature,
                 messages=messages,
                 stream=True,
             )
         except Exception as exc:
-            raise LMStudioUnavailableError(
-                "LM Studio is unavailable. Start LM Studio, load the model, "
-                "and verify the OpenAI-compatible server is running."
-            ) from exc
+            raise LLMProviderUnavailableError(PROVIDER_UNAVAILABLE_MESSAGE) from exc
         for chunk in stream:
             text = chunk["choices"][0].get("delta", {}).get("content", "")
             if text:
