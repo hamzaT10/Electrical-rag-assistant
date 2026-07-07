@@ -2,7 +2,7 @@ fastapi==0.116.1
 uvicorn[standard]==0.35.0
 python-multipart==0.0.20
 langchain-community==0.3.27
-langchain-huggingface==0.3.1
+langchain-huggingface==1.2.2
 langchain-core>=0.3.70,<1.0.0
 langchain-text-splitters==0.3.8
 sentence-transformers==4.1.0
