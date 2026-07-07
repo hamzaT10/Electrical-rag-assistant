@@ -23,5 +23,5 @@ alembic
 redis
 celery[redis]
 qdrant-client==1.12.2
-prometheus-client==0.22.1
+prometheus-client==0.25.0
 langfuse==4.13.0
